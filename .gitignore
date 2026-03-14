@@ -1,0 +1,38 @@
+# Build outputs
+/target/
+/frontend/node_modules/
+/frontend/dist/
+/frontend/dist-ssr/
+
+# Environment files
+/frontend/.env
+/frontend/.env.*
+!/frontend/.env.example
+
+# IDE/editor files
+/.idea/
+/.vscode/
+*.iml
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Optional local container files (ignore for now, remove these lines if you decide to push Docker setup)
+Dockerfile
+compose.yaml
+.dockerignore
