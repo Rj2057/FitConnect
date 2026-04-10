@@ -57,7 +57,6 @@ export function BookingsPage() {
   const [ratingForm, setRatingForm] = useState({ bookingId: '', rating: '5', review: '' })
   const [message, setMessage] = useState('')
   const availableSlots = useMemo(() => getAvailableSlots(form.date), [form.date])
-  const rateableBookings = useMemo(() => (bookingsState.data || []).filter((booking) => hasSessionEnded(booking)), [bookingsState.data])
 
   const bookingsState = useAsyncData(() => {
     if (user?.role === 'GYM_TRAINER') {
@@ -70,6 +69,8 @@ export function BookingsPage() {
 
     return []
   }, [user?.role])
+
+  const rateableBookings = useMemo(() => (bookingsState.data || []).filter((booking) => hasSessionEnded(booking)), [bookingsState.data])
 
   const columns = useMemo(() => {
     const base = [

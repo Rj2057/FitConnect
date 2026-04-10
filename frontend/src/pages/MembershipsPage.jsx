@@ -24,9 +24,35 @@ export function MembershipsPage() {
 
   const selectedGym = gyms.find((gym) => String(gym.id) === String(purchaseForm.gymId))
   const selectedPlan = plans.find((plan) => plan.planName === purchaseForm.planName)
-  const estimatedAmount = selectedGym && selectedPlan
-    ? Number(selectedGym.monthlyFee) * Number(selectedPlan.multiplier) * Number(purchaseForm.durationMonths || 1)
-    : 0
+  
+  // Get discount percentage based on duration
+  const getDiscountPercentage = (months) => {
+    if (months >= 12) return 30  // Yearly: 30% discount
+    if (months >= 9) return 25   // 9+ months: 25% discount
+    if (months >= 6) return 20   // 6 months: 20% discount
+    if (months >= 3) return 10   // Quarterly (3 months): 10% discount
+    return 0                     // 1-2 months: No discount
+  }
+  
+  // Calculate estimated amount with tiered discount
+  const calculateEstimatedAmount = () => {
+    if (!selectedGym || !selectedPlan) return 0
+    const monthlyFee = Number(selectedGym.monthlyFee)
+    const multiplier = Number(selectedPlan.multiplier)
+    const duration = Number(purchaseForm.durationMonths || 1)
+    
+    // Base amount without discount
+    const baseAmount = monthlyFee * multiplier * duration
+    
+    // Get applicable discount percentage
+    const discountPercent = getDiscountPercentage(duration)
+    
+    // Apply discount
+    return baseAmount * (1 - discountPercent / 100)
+  }
+  
+  const estimatedAmount = calculateEstimatedAmount()
+  const discountPercent = getDiscountPercentage(Number(purchaseForm.durationMonths || 1))
 
   const membershipState = useAsyncData(async () => {
     if (user?.role === 'GYM_OWNER' && selectedGymId) {
@@ -126,7 +152,7 @@ export function MembershipsPage() {
 
       {user?.role === 'GYM_USER' ? (
         <Card>
-          <SectionTitle title="Purchase membership" subtitle="Choose plan and duration. Amount is auto-calculated from gym monthly fee. Minimum duration is 1 month." />
+          <SectionTitle title="Purchase membership" subtitle="Choose plan and duration. Get discounts for longer commitments: 10% for 3+ months, 20% for 6+ months, 25% for 9+ months, 30% for 12 months!" />
           <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={handlePurchase}>
             <Field label="Gym">
               <Select value={purchaseForm.gymId} onChange={(event) => setPurchaseForm((current) => ({ ...current, gymId: event.target.value }))} required>
@@ -147,7 +173,7 @@ export function MembershipsPage() {
             <Field label="Duration (months)">
               <Input type="number" min="1" value={purchaseForm.durationMonths} onChange={(event) => setPurchaseForm((current) => ({ ...current, durationMonths: event.target.value }))} required />
             </Field>
-            <Field label="Estimated amount">
+            <Field label={`Estimated amount ${discountPercent > 0 ? `(${discountPercent}% OFF)` : ''}`}>
               <Input value={formatCurrency(estimatedAmount)} readOnly />
             </Field>
             <div className="md:col-span-2">

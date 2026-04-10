@@ -54,9 +54,7 @@ public class MembershipService {
         int durationMonths = request.getDurationMonths();
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusMonths(durationMonths);
-        BigDecimal amount = BigDecimal.valueOf(gym.getMonthlyFee())
-            .multiply(BigDecimal.valueOf(plan.getMultiplier()))
-            .multiply(BigDecimal.valueOf(durationMonths));
+        BigDecimal amount = calculateMembershipAmount(gym.getMonthlyFee(), plan.getMultiplier(), durationMonths);
 
         boolean hasActiveMembership = membershipRepository.findByUser(user).stream()
                 .anyMatch(membership -> membership.getGym().getId().equals(gym.getId())
@@ -163,5 +161,44 @@ public class MembershipService {
         } catch (IllegalArgumentException ex) {
             throw new BadRequestException("Invalid plan name. Allowed plans: BASIC, PRO, ELITE");
         }
+    }
+
+    /**
+     * Calculates membership amount with tiered discounts based on duration.
+     * Discount structure:
+     * - 1-2 months: 0% discount (base price)
+     * - 3 months (quarterly): 10% discount
+     * - 6 months: 20% discount
+     * - 9+ months: 25% discount
+     * - 12 months (yearly): 30% discount
+     */
+    private BigDecimal calculateMembershipAmount(Double monthlyFee, Double planMultiplier, Integer durationMonths) {
+        // Base amount without discount
+        BigDecimal baseAmount = BigDecimal.valueOf(monthlyFee)
+                .multiply(BigDecimal.valueOf(planMultiplier))
+                .multiply(BigDecimal.valueOf(durationMonths));
+        
+        // Determine discount percentage based on duration
+        double discountPercentage = getDiscountPercentage(durationMonths);
+        
+        // Apply discount
+        BigDecimal discountMultiplier = BigDecimal.valueOf(1 - (discountPercentage / 100.0));
+        return baseAmount.multiply(discountMultiplier).setScale(2, java.math.RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Returns discount percentage based on membership duration in months.
+     */
+    private double getDiscountPercentage(Integer durationMonths) {
+        if (durationMonths >= 12) {
+            return 30.0;  // Yearly: 30% discount
+        } else if (durationMonths >= 9) {
+            return 25.0;  // 9+ months: 25% discount
+        } else if (durationMonths >= 6) {
+            return 20.0;  // 6 months: 20% discount
+        } else if (durationMonths >= 3) {
+            return 10.0;  // Quarterly (3 months): 10% discount
+        }
+        return 0.0;  // 1-2 months: No discount
     }
 }
