@@ -64,4 +64,12 @@ public class MembershipController {
                                                                      @Valid @RequestBody MembershipStatusUpdateRequest request) {
         return ResponseEntity.ok(membershipService.updateMembershipStatus(membershipId, request));
     }
+
+    @PutMapping("/{membershipId}/confirm-payment/{paymentId}")
+    @PreAuthorize("hasRole('GYM_USER')")
+    @Operation(summary = "Confirm membership payment", description = "Activates membership after successful payment")
+    public ResponseEntity<MembershipResponse> confirmMembershipPayment(@PathVariable Long membershipId,
+                                                                       @PathVariable Long paymentId) {
+        return ResponseEntity.ok(membershipService.confirmMembershipPayment(membershipId, paymentId));
+    }
 }

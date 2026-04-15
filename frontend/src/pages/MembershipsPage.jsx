@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { request } from '../api/client'
 import { DataTable } from '../components/DataTable'
 import { Badge, Button, Card, Field, Input, LoadingBlock, Message, SectionTitle, Select } from '../components/ui'
@@ -13,6 +14,7 @@ const membershipTones = {
 }
 
 export function MembershipsPage() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const gymsState = useAsyncData(() => request('get', '/api/gyms'), [])
   const plansState = useAsyncData(() => request('get', '/api/memberships/plans'), [])
@@ -21,6 +23,7 @@ export function MembershipsPage() {
   const [selectedGymId, setSelectedGymId] = useState('')
   const [message, setMessage] = useState('')
   const [purchaseForm, setPurchaseForm] = useState({ gymId: '', planName: '', durationMonths: '1' })
+  const [isCreating, setIsCreating] = useState(false)
 
   const selectedGym = gyms.find((gym) => String(gym.id) === String(purchaseForm.gymId))
   const selectedPlan = plans.find((plan) => plan.planName === purchaseForm.planName)
@@ -89,16 +92,18 @@ export function MembershipsPage() {
     setMessage('')
 
     try {
+      setIsCreating(true)
       const created = await request('post', '/api/memberships', {
         gymId: Number(purchaseForm.gymId),
         planName: purchaseForm.planName,
         durationMonths: Number(purchaseForm.durationMonths),
       })
-      membershipState.setData((current) => [...(current || []), created])
-      setPurchaseForm({ gymId: '', planName: '', durationMonths: '1' })
-      setMessage('Membership purchased successfully.')
+      
+      // Redirect to payments page with membership details
+      navigate(`/payments?membershipId=${created.id}&gymId=${created.gymId}&amount=${created.amount}&description=${encodeURIComponent(created.planName)} Plan`)
     } catch (err) {
       setMessage(err?.response?.data?.message || 'Unable to create membership')
+      setIsCreating(false)
     }
   }
 

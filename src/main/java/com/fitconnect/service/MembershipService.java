@@ -123,6 +123,43 @@ public class MembershipService {
         return toResponse(membershipRepository.save(membership));
     }
 
+    @Transactional
+    public MembershipResponse confirmMembershipPayment(Long membershipId, Long paymentId) {
+        User user = currentUserService.getCurrentUser();
+        Membership membership = membershipRepository.findById(membershipId)
+                .orElseThrow(() -> new ResourceNotFoundException("Membership not found"));
+
+        if (!membership.getUser().getId().equals(user.getId())) {
+            throw new UnauthorizedException("You do not have access to this membership");
+        }
+
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        if (payment.getStatus() != PaymentStatus.SUCCESS) {
+            throw new BadRequestException("Payment must be successful to confirm membership");
+        }
+
+        if (!payment.getUser().getId().equals(user.getId())) {
+            throw new UnauthorizedException("Payment does not belong to you");
+        }
+
+        membership.setStatus(MembershipStatus.ACTIVE);
+        return toResponse(membershipRepository.save(membership));
+    }
+
+    @Transactional
+    public void cancelMembershipsForGym(User user, Gym gym) {
+        List<Membership> memberships = membershipRepository.findByUser(user);
+        for (Membership membership : memberships) {
+            if (membership.getGym().getId().equals(gym.getId()) &&
+                membership.getStatus() == MembershipStatus.ACTIVE) {
+                membership.setStatus(MembershipStatus.CANCELLED);
+                membershipRepository.save(membership);
+            }
+        }
+    }
+
     private Gym getOwnedGym(Long gymId, Long ownerId) {
         Gym gym = gymRepository.findById(gymId)
                 .orElseThrow(() -> new ResourceNotFoundException("Gym not found"));
