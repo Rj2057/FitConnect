@@ -11,6 +11,7 @@ const membershipTones = {
   ACTIVE: 'success',
   EXPIRED: 'warning',
   CANCELLED: 'danger',
+  PENDING: 'warning',
 }
 
 export function MembershipsPage() {
@@ -95,7 +96,8 @@ export function MembershipsPage() {
         durationMonths: Number(purchaseForm.durationMonths),
       })
       
-      // Redirect to payments page with membership details
+      setPurchaseForm(null)
+      // Redirect to payments page with exact amount calculated by backend
       navigate(`/payments?membershipId=${created.id}&gymId=${created.gymId}&amount=${created.amount}&description=${encodeURIComponent('Standard Membership')}`)
     } catch (err) {
       setMessage(err?.response?.data?.message || 'Unable to create membership')
@@ -143,6 +145,15 @@ export function MembershipsPage() {
                   <Button variant="secondary" onClick={() => handleStatusUpdate(row.id, 'ACTIVE')}>Activate</Button>
                   <Button variant="ghost" onClick={() => handleStatusUpdate(row.id, 'EXPIRED')}>Expire</Button>
                 </div>
+              ) }]
+            : []),
+          ...(user?.role === 'GYM_USER'
+            ? [{ key: 'actions', label: 'Actions', render: (row) => (
+                row.status === 'PENDING' ? (
+                  <Button variant="secondary" onClick={() => navigate(`/payments?membershipId=${row.id}&gymId=${row.gymId}&amount=${row.amount}&description=${encodeURIComponent('Standard Membership')}`)}>
+                    Pay Now
+                  </Button>
+                ) : null
               ) }]
             : []),
         ]}

@@ -67,21 +67,14 @@ public class MembershipService {
         Membership membership = Membership.builder()
                 .user(user)
                 .gym(gym)
-            .planName(STANDARD_PLAN_NAME)
-            .durationMonths(durationMonths)
-            .startDate(startDate)
-            .endDate(endDate)
-                .status(MembershipStatus.ACTIVE)
+                .planName(STANDARD_PLAN_NAME)
+                .durationMonths(durationMonths)
+                .startDate(startDate)
+                .endDate(endDate)
+                .status(MembershipStatus.PENDING)
                 .build();
 
         Membership savedMembership = membershipRepository.save(membership);
-
-        paymentRepository.save(Payment.builder()
-                .user(user)
-                .gym(gym)
-                .amount(amount)
-                .status(PaymentStatus.SUCCESS)
-                .build());
 
         return toResponse(savedMembership);
     }
@@ -176,6 +169,9 @@ public class MembershipService {
                 .max((a, b) -> a.getPaidAt().compareTo(b.getPaidAt()))
                 .orElse(null);
 
+        BigDecimal amount = payment != null ? payment.getAmount() 
+                : calculateMembershipAmount(membership.getGym().getMonthlyFee(), STANDARD_MULTIPLIER, membership.getDurationMonths());
+
         return MembershipResponse.builder()
                 .id(membership.getId())
                 .userId(membership.getUser().getId())
@@ -184,7 +180,7 @@ public class MembershipService {
                 .gymName(membership.getGym().getName())
                 .planName(membership.getPlanName())
                 .durationMonths(membership.getDurationMonths())
-                .amount(payment != null ? payment.getAmount() : BigDecimal.ZERO)
+                .amount(amount)
                 .startDate(membership.getStartDate())
                 .endDate(membership.getEndDate())
                 .status(membership.getStatus())

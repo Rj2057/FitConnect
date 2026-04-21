@@ -177,6 +177,12 @@ export function PaymentsPage() {
       setRefunding(true)
       const response = await request('put', `/api/payments/${id}/refund`)
       setPaymentSuccess(response)
+      
+      // Update the table state to show REFUNDED immediately
+      paymentsState.setData((current) => 
+        (current || []).map((p) => p.id === id ? { ...p, status: 'REFUNDED' } : p)
+      )
+
       if (membershipIdParam) {
         setMembershipRefunded(true)
       }
