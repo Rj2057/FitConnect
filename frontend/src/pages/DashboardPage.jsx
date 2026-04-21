@@ -75,25 +75,6 @@ export function DashboardPage() {
       {loading ? <LoadingBlock label="Loading dashboard metrics..." /> : null}
       {error ? <Card className="text-sm text-[#9b2525]">{error}</Card> : null}
       {data?.cards ? <MetricGrid items={data.cards} /> : null}
-
-      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <Card className="bg-[linear-gradient(135deg,rgba(216,90,38,0.14),rgba(255,255,255,0.78))]">
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--ink-soft)]">Platform Brief</p>
-          <h3 className="mt-4 text-2xl font-semibold text-[var(--ink)]">Full-stack fitness operations, centered on actual gym workflows.</h3>
-          <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--ink-soft)]">
-            The frontend is connected to your Spring Boot backend for authentication, memberships, training sessions, workouts, streaks, attendance, equipment, payments, and owner oversight. Use the side navigation to move through role-relevant features.
-          </p>
-        </Card>
-
-        <Card>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[var(--ink-soft)]">Backend Status</p>
-          <ul className="mt-4 space-y-3 text-sm text-[var(--ink-soft)]">
-            <li>JWT auth enabled and reusable from the frontend token store.</li>
-            <li>Swagger UI supports bearer authentication for manual API verification.</li>
-            <li>Integration tests cover auth, bookings, equipment, streaks, calories, memberships, and payments.</li>
-          </ul>
-        </Card>
-      </div>
     </div>
   )
 }

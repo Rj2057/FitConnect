@@ -5,7 +5,8 @@ package com.fitconnect.config;
  *
  * Provides a single, globally accessible configuration instance.
  * Uses double-checked locking for thread-safe lazy initialization.
- */
+ */ 
+//singleton pattern for application-wide configuration
 public class AppConfig {
 
     private static volatile AppConfig instance;

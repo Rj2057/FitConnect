@@ -146,20 +146,9 @@ public class BookingService {
     }
 
     private BookingResponse toResponse(TrainerBooking booking) {
-        return BookingResponse.builder()
-                .id(booking.getId())
-                .trainerId(booking.getTrainer().getId())
-                .userId(booking.getUser().getId())
-                .trainerName(booking.getTrainer().getUser().getName())
-                .userName(booking.getUser().getName())
-                .date(booking.getDate())
-                .timeSlot(booking.getTimeSlot())
-                .userRating(booking.getUserRating())
-                .userReview(booking.getUserReview())
-                .trainerResponseMessage(booking.getTrainerResponseMessage())
-                .trainerProposedTimeSlot(booking.getTrainerProposedTimeSlot())
-                .status(booking.getStatus())
-                .build();
+        // Builder Pattern: delegates to the static factory on BookingResponse
+        // which calls BookingResponse.builder()...build() internally
+        return BookingResponse.from(booking);
     }
 
     private void validateBookingSlot(DayOfWeek dayOfWeek, String slot) {
