@@ -41,6 +41,7 @@ public class BookingService {
         User currentUser = currentUserService.getCurrentUser();
         Trainer trainer = trainerService.getTrainerEntity(request.getTrainerId());
         validateBookingSlot(request.getDate().getDayOfWeek(), request.getTimeSlot());
+        validateNoUserSlotConflict(currentUser, request);
 
         TrainerBooking booking = TrainerBooking.builder()
                 .trainer(trainer)
@@ -176,6 +177,16 @@ public class BookingService {
 
         if (start.isBefore(open) || end.isAfter(close)) {
             throw new BadRequestException("Selected slot is outside allowed timings");
+        }
+    }
+
+    private void validateNoUserSlotConflict(User user, BookingRequest request) {
+        boolean hasActiveSlotBooking = bookingRepository.findByUserAndDateAndTimeSlot(user, request.getDate(), request.getTimeSlot())
+                .stream()
+                .anyMatch(booking -> booking.getStatus() != BookingStatus.CANCELLED);
+
+        if (hasActiveSlotBooking) {
+            throw new BadRequestException("You already have a booking for this time slot. You can rebook this slot only if previous request is rejected.");
         }
     }
 }
