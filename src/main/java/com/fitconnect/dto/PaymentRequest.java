@@ -23,4 +23,11 @@ public class PaymentRequest {
     private BigDecimal amount;
 
     private String description; // e.g., "Monthly membership - PRO"
+
+    /**
+     * Factory Pattern: determines which PaymentProcessor to use.
+     * Supported values: "MOCK" (default), "STRIPE"
+     */
+    @Builder.Default
+    private String paymentType = "MOCK";
 }

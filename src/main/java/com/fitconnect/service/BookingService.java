@@ -10,6 +10,10 @@ import com.fitconnect.entity.User;
 import com.fitconnect.entity.enums.BookingStatus;
 import com.fitconnect.exception.BadRequestException;
 import com.fitconnect.exception.ResourceNotFoundException;
+import com.fitconnect.service.command.AcceptBookingCommand;
+import com.fitconnect.service.command.BookingCommand;
+import com.fitconnect.service.command.BookingCommandInvoker;
+import com.fitconnect.service.command.RejectBookingCommand;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -104,19 +108,24 @@ public class BookingService {
             throw new BadRequestException("Only pending bookings can be accepted or rejected");
         }
 
+        String trainerMsg = request.getMessage() == null ? null : request.getMessage().trim();
+        String trainerSlot = request.getProposedTimeSlot() == null ? null : request.getProposedTimeSlot().trim();
         String action = request.getAction().trim().toUpperCase(Locale.ROOT);
+
+        // Command Pattern: encapsulate ACCEPT/REJECT as command objects
+        // The invoker calls execute() without knowing which action is performed
+        BookingCommandInvoker invoker = new BookingCommandInvoker();
+        BookingCommand command;
+
         if ("ACCEPT".equals(action)) {
-            booking.setStatus(BookingStatus.CONFIRMED);
+            command = new AcceptBookingCommand(booking, bookingRepository, trainerMsg, trainerSlot);
         } else if ("REJECT".equals(action)) {
-            booking.setStatus(BookingStatus.CANCELLED);
+            command = new RejectBookingCommand(booking, bookingRepository, trainerMsg, trainerSlot);
         } else {
             throw new BadRequestException("Action must be ACCEPT or REJECT");
         }
 
-        booking.setTrainerResponseMessage(request.getMessage() == null ? null : request.getMessage().trim());
-        booking.setTrainerProposedTimeSlot(request.getProposedTimeSlot() == null ? null : request.getProposedTimeSlot().trim());
-
-        return toResponse(bookingRepository.save(booking));
+        return invoker.invoke(command);
     }
 
     private boolean hasSessionEnded(TrainerBooking booking) {

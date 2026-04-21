@@ -1,5 +1,6 @@
 package com.fitconnect.service;
 
+import com.fitconnect.config.AppConfig;
 import com.fitconnect.dto.PaymentRequest;
 import com.fitconnect.dto.PaymentResponse;
 import com.fitconnect.dto.MonthlyRevenueResponse;
@@ -17,12 +18,12 @@ import com.fitconnect.repository.GymRepository;
 import com.fitconnect.repository.EquipmentRentalTransactionRepository;
 import com.fitconnect.repository.MembershipRepository;
 import com.fitconnect.repository.PaymentRepository;
+import com.fitconnect.service.payment.PaymentProcessorFactory;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Random;
 import java.math.BigDecimal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
 @SuppressWarnings("null")
 public class PaymentService {
 
-    private static final long REFUND_WINDOW_HOURS = 1;
+    // Singleton Pattern: AppConfig provides the refund window setting centrally
+    private static final long REFUND_WINDOW_HOURS =
+            AppConfig.getInstance().getRefundWindowHours();
 
     private final PaymentRepository paymentRepository;
     private final GymRepository gymRepository;
@@ -129,9 +132,9 @@ public class PaymentService {
 
         payment = paymentRepository.save(payment);
 
-        // Mock payment processing - simulate 90% success rate
+        // Factory Pattern: delegate to the processor selected by PaymentProcessorFactory
         try {
-            mockPaymentVerification();
+            PaymentProcessorFactory.getProcessor(request.getPaymentType()).process();
             payment.setStatus(PaymentStatus.SUCCESS);
         } catch (PaymentException e) {
             payment.setStatus(PaymentStatus.FAILED);
@@ -184,14 +187,7 @@ public class PaymentService {
         return toResponse(paymentRepository.save(payment));
     }
 
-    private void mockPaymentVerification() {
-        // Mock payment verification - 80% success, 20% failure
-        Random random = new Random();
-        int result = random.nextInt(100);
-        if (result >= 80) {
-            throw new PaymentException("Payment verification failed. Please try again.");
-        }
-    }
+    // Removed: mockPaymentVerification() — logic moved to MockPaymentProcessor (Factory pattern)
 
     private void validateNoActiveMembershipPayment(User user, Gym gym) {
         LocalDate today = LocalDate.now();
