@@ -55,6 +55,7 @@ export function BookingsPage() {
   const trainersState = useAsyncData(() => request('get', '/api/trainers'), [])
   const [form, setForm] = useState({ trainerId: '', date: '', timeSlot: '' })
   const [ratingForm, setRatingForm] = useState({ bookingId: '', rating: '5', review: '' })
+  const [trainerReply, setTrainerReply] = useState({ bookingId: '', message: '', proposedTimeSlot: '' })
   const [message, setMessage] = useState('')
   const availableSlots = useMemo(() => getAvailableSlots(form.date), [form.date])
 
@@ -84,6 +85,16 @@ export function BookingsPage() {
         { key: 'trainerName', label: 'Trainer' },
         ...base,
         {
+          key: 'trainerResponseMessage',
+          label: 'Trainer Response',
+          render: (row) => row.trainerResponseMessage || '-',
+        },
+        {
+          key: 'trainerProposedTimeSlot',
+          label: 'Alternate Time',
+          render: (row) => row.trainerProposedTimeSlot || '-',
+        },
+        {
           key: 'userRating',
           label: 'Your Rating',
           render: (row) => (row.userRating ? `${row.userRating} / 5` : 'Not rated'),
@@ -91,7 +102,21 @@ export function BookingsPage() {
       ]
     }
 
-    return [{ key: 'userName', label: 'Client' }, { key: 'trainerName', label: 'Trainer' }, ...base]
+    return [
+      { key: 'userName', label: 'Client' },
+      { key: 'trainerName', label: 'Trainer' },
+      ...base,
+      {
+        key: 'trainerResponseMessage',
+        label: 'Message',
+        render: (row) => row.trainerResponseMessage || '-',
+      },
+      {
+        key: 'trainerProposedTimeSlot',
+        label: 'Alternate Time',
+        render: (row) => row.trainerProposedTimeSlot || '-',
+      },
+    ]
   }, [user?.role])
 
   async function handleSubmit(event) {
@@ -127,6 +152,24 @@ export function BookingsPage() {
       setMessage('Trainer rating submitted successfully.')
     } catch (err) {
       setMessage(err?.response?.data?.message || 'Unable to submit trainer rating')
+    }
+  }
+
+  async function handleTrainerAction(event) {
+    event.preventDefault()
+    setMessage('')
+
+    try {
+      const updated = await request('put', `/api/bookings/${trainerReply.bookingId}/status`, {
+        action: event.nativeEvent.submitter?.value || 'ACCEPT',
+        message: trainerReply.message,
+        proposedTimeSlot: trainerReply.proposedTimeSlot,
+      })
+      bookingsState.setData((current) => (current || []).map((item) => item.id === updated.id ? updated : item))
+      setTrainerReply({ bookingId: '', message: '', proposedTimeSlot: '' })
+      setMessage('Booking decision updated successfully.')
+    } catch (err) {
+      setMessage(err?.response?.data?.message || 'Unable to update booking decision')
     }
   }
 
@@ -198,6 +241,34 @@ export function BookingsPage() {
             </form>
           </Card>
         </>
+      ) : null}
+
+      {user?.role === 'GYM_TRAINER' ? (
+        <Card>
+          <SectionTitle title="Respond to booking request" subtitle="Accept or reject pending requests with a message. You can suggest a different time slot." />
+          <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={handleTrainerAction}>
+            <Field label="Pending booking">
+              <Select value={trainerReply.bookingId} onChange={(event) => setTrainerReply((current) => ({ ...current, bookingId: event.target.value }))} required>
+                <option value="">Select booking</option>
+                {(bookingsState.data || []).filter((booking) => booking.status === 'PENDING').map((booking) => (
+                  <option key={booking.id} value={booking.id}>{booking.userName} · {booking.date} · {booking.timeSlot}</option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Suggested alternate time (optional)">
+              <Input value={trainerReply.proposedTimeSlot} onChange={(event) => setTrainerReply((current) => ({ ...current, proposedTimeSlot: event.target.value }))} placeholder="e.g. 18:00-19:00" />
+            </Field>
+            <div className="md:col-span-2">
+              <Field label="Message to user">
+              <Input value={trainerReply.message} onChange={(event) => setTrainerReply((current) => ({ ...current, message: event.target.value }))} placeholder="I am available at a different time..." />
+              </Field>
+            </div>
+            <div className="md:col-span-2 flex gap-3">
+              <Button className="w-fit" type="submit" value="ACCEPT">Accept booking</Button>
+              <Button className="w-fit" type="submit" value="REJECT" variant="secondary">Reject booking</Button>
+            </div>
+          </form>
+        </Card>
       ) : null}
     </div>
   )

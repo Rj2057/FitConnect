@@ -8,12 +8,10 @@ import { TrainersPage } from './pages/TrainersPage'
 import { MembershipsPage } from './pages/MembershipsPage'
 import { BookingsPage } from './pages/BookingsPage'
 import { WorkoutsPage } from './pages/WorkoutsPage'
-import { AttendancePage } from './pages/AttendancePage'
 import { PaymentsPage } from './pages/PaymentsPage'
 import { StreakPage } from './pages/StreakPage'
 import { EquipmentPage } from './pages/EquipmentPage'
 import { OwnerHubPage } from './pages/OwnerHubPage'
-import { TrainerProfilePage } from './pages/TrainerProfilePage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
 function ProtectedRoute({ children }) {
@@ -66,14 +64,6 @@ function App() {
             </RoleGuard>
           }
         />
-        <Route
-          path="/attendance"
-          element={
-            <RoleGuard allowedRoles={['GYM_USER']}>
-              <AttendancePage />
-            </RoleGuard>
-          }
-        />
         <Route path="/payments" element={<PaymentsPage />} />
         <Route
           path="/streak"
@@ -89,14 +79,6 @@ function App() {
           element={
             <RoleGuard allowedRoles={['GYM_OWNER']}>
               <OwnerHubPage />
-            </RoleGuard>
-          }
-        />
-        <Route
-          path="/trainer-profile"
-          element={
-            <RoleGuard allowedRoles={['GYM_TRAINER']}>
-              <TrainerProfilePage />
             </RoleGuard>
           }
         />

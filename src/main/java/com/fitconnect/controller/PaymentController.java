@@ -2,6 +2,7 @@ package com.fitconnect.controller;
 
 import com.fitconnect.dto.PaymentRequest;
 import com.fitconnect.dto.PaymentResponse;
+import com.fitconnect.dto.MonthlyRevenueResponse;
 import com.fitconnect.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,6 +43,14 @@ public class PaymentController {
     @Operation(summary = "Get gym payments", description = "Returns payment history for a gym owned by the authenticated owner")
     public ResponseEntity<List<PaymentResponse>> getGymPayments(@PathVariable Long gymId) {
         return ResponseEntity.ok(paymentService.getGymPayments(gymId));
+    }
+
+    @GetMapping("/gym/{gymId}/monthly-revenue")
+    @PreAuthorize("hasRole('GYM_OWNER')")
+    @Operation(summary = "Get monthly revenue", description = "Returns current and previous monthly revenue including memberships and marketplace sales")
+    public ResponseEntity<List<MonthlyRevenueResponse>> getGymMonthlyRevenue(@PathVariable Long gymId,
+                                                                             @RequestParam(defaultValue = "3") Integer months) {
+        return ResponseEntity.ok(paymentService.getGymMonthlyRevenue(gymId, months));
     }
 
     @PostMapping("/process")

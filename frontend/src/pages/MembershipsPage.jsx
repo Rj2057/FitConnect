@@ -17,16 +17,13 @@ export function MembershipsPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const gymsState = useAsyncData(() => request('get', '/api/gyms'), [])
-  const plansState = useAsyncData(() => request('get', '/api/memberships/plans'), [])
   const gyms = gymsState.data || []
-  const plans = plansState.data || []
   const [selectedGymId, setSelectedGymId] = useState('')
   const [message, setMessage] = useState('')
-  const [purchaseForm, setPurchaseForm] = useState({ gymId: '', planName: '', durationMonths: '1' })
+  const [purchaseForm, setPurchaseForm] = useState({ gymId: '', durationMonths: '1' })
   const [isCreating, setIsCreating] = useState(false)
 
   const selectedGym = gyms.find((gym) => String(gym.id) === String(purchaseForm.gymId))
-  const selectedPlan = plans.find((plan) => plan.planName === purchaseForm.planName)
   
   // Get discount percentage based on duration
   const getDiscountPercentage = (months) => {
@@ -39,13 +36,12 @@ export function MembershipsPage() {
   
   // Calculate estimated amount with tiered discount
   const calculateEstimatedAmount = () => {
-    if (!selectedGym || !selectedPlan) return 0
+    if (!selectedGym) return 0
     const monthlyFee = Number(selectedGym.monthlyFee)
-    const multiplier = Number(selectedPlan.multiplier)
     const duration = Number(purchaseForm.durationMonths || 1)
     
     // Base amount without discount
-    const baseAmount = monthlyFee * multiplier * duration
+    const baseAmount = monthlyFee * duration
     
     // Get applicable discount percentage
     const discountPercent = getDiscountPercentage(duration)
@@ -95,12 +91,12 @@ export function MembershipsPage() {
       setIsCreating(true)
       const created = await request('post', '/api/memberships', {
         gymId: Number(purchaseForm.gymId),
-        planName: purchaseForm.planName,
+        planName: 'STANDARD',
         durationMonths: Number(purchaseForm.durationMonths),
       })
       
       // Redirect to payments page with membership details
-      navigate(`/payments?membershipId=${created.id}&gymId=${created.gymId}&amount=${created.amount}&description=${encodeURIComponent(created.planName)} Plan`)
+      navigate(`/payments?membershipId=${created.id}&gymId=${created.gymId}&amount=${created.amount}&description=${encodeURIComponent('Standard Membership')}`)
     } catch (err) {
       setMessage(err?.response?.data?.message || 'Unable to create membership')
       setIsCreating(false)
@@ -168,12 +164,7 @@ export function MembershipsPage() {
               </Select>
             </Field>
             <Field label="Plan">
-              <Select value={purchaseForm.planName} onChange={(event) => setPurchaseForm((current) => ({ ...current, planName: event.target.value }))} required>
-                <option value="">Select plan</option>
-                {plans.map((plan) => (
-                  <option key={plan.planName} value={plan.planName}>{plan.planName} · x{plan.multiplier}</option>
-                ))}
-              </Select>
+              <Input value="STANDARD" readOnly />
             </Field>
             <Field label="Duration (months)">
               <Input type="number" min="1" value={purchaseForm.durationMonths} onChange={(event) => setPurchaseForm((current) => ({ ...current, durationMonths: event.target.value }))} required />

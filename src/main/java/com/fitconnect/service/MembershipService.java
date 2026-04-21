@@ -8,7 +8,6 @@ import com.fitconnect.entity.Gym;
 import com.fitconnect.entity.Membership;
 import com.fitconnect.entity.Payment;
 import com.fitconnect.entity.User;
-import com.fitconnect.entity.enums.MembershipPlan;
 import com.fitconnect.entity.enums.MembershipStatus;
 import com.fitconnect.entity.enums.PaymentStatus;
 import com.fitconnect.exception.BadRequestException;
@@ -20,7 +19,6 @@ import com.fitconnect.repository.MembershipRepository;
 import com.fitconnect.repository.PaymentRepository;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 @SuppressWarnings("null")
 public class MembershipService {
+    private static final String STANDARD_PLAN_NAME = "STANDARD";
+    private static final double STANDARD_MULTIPLIER = 1.0;
 
     private final MembershipRepository membershipRepository;
     private final PaymentRepository paymentRepository;
@@ -50,11 +50,10 @@ public class MembershipService {
         Gym gym = gymRepository.findById(request.getGymId())
                 .orElseThrow(() -> new ResourceNotFoundException("Gym not found"));
 
-        MembershipPlan plan = resolvePlan(request.getPlanName());
         int durationMonths = request.getDurationMonths();
         LocalDate startDate = LocalDate.now();
         LocalDate endDate = startDate.plusMonths(durationMonths);
-        BigDecimal amount = calculateMembershipAmount(gym.getMonthlyFee(), plan.getMultiplier(), durationMonths);
+        BigDecimal amount = calculateMembershipAmount(gym.getMonthlyFee(), STANDARD_MULTIPLIER, durationMonths);
 
         boolean hasActiveMembership = membershipRepository.findByUser(user).stream()
                 .anyMatch(membership -> membership.getGym().getId().equals(gym.getId())
@@ -68,7 +67,7 @@ public class MembershipService {
         Membership membership = Membership.builder()
                 .user(user)
                 .gym(gym)
-            .planName(plan.name())
+            .planName(STANDARD_PLAN_NAME)
             .durationMonths(durationMonths)
             .startDate(startDate)
             .endDate(endDate)
@@ -87,16 +86,16 @@ public class MembershipService {
         return toResponse(savedMembership);
     }
 
-            public List<MembershipPlanOptionResponse> getMembershipPlans() {
-            return List.of(MembershipPlan.values()).stream()
-                .map(plan -> MembershipPlanOptionResponse.builder()
-                    .planName(plan.name())
-                    .description(plan.getDescription())
-                    .multiplier(plan.getMultiplier())
-                    .minimumMonths(1)
-                    .build())
-                .toList();
-            }
+    public List<MembershipPlanOptionResponse> getMembershipPlans() {
+        return List.of(
+                MembershipPlanOptionResponse.builder()
+                        .planName(STANDARD_PLAN_NAME)
+                        .description("Single membership plan for all users")
+                        .multiplier(STANDARD_MULTIPLIER)
+                        .minimumMonths(1)
+                        .build()
+        );
+    }
 
     public List<MembershipResponse> getMyMemberships() {
         User user = currentUserService.getCurrentUser();
@@ -190,14 +189,6 @@ public class MembershipService {
                 .endDate(membership.getEndDate())
                 .status(membership.getStatus())
                 .build();
-    }
-
-    private MembershipPlan resolvePlan(String planName) {
-        try {
-            return MembershipPlan.valueOf(planName.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException ex) {
-            throw new BadRequestException("Invalid plan name. Allowed plans: BASIC, PRO, ELITE");
-        }
     }
 
     /**

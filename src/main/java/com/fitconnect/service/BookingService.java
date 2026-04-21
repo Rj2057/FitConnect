@@ -3,6 +3,7 @@ package com.fitconnect.service;
 import com.fitconnect.dto.BookingRatingRequest;
 import com.fitconnect.dto.BookingRequest;
 import com.fitconnect.dto.BookingResponse;
+import com.fitconnect.dto.BookingStatusUpdateRequest;
 import com.fitconnect.entity.Trainer;
 import com.fitconnect.entity.TrainerBooking;
 import com.fitconnect.entity.User;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import com.fitconnect.repository.TrainerBookingRepository;
 import java.util.List;
+import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,6 +89,35 @@ public class BookingService {
         return toResponse(saved);
     }
 
+    @Transactional
+    public BookingResponse updateBookingStatus(Long bookingId, BookingStatusUpdateRequest request) {
+        Trainer trainer = trainerService.getCurrentTrainer();
+        TrainerBooking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+
+        if (!booking.getTrainer().getId().equals(trainer.getId())) {
+            throw new BadRequestException("You can only update your own client sessions");
+        }
+
+        if (booking.getStatus() != BookingStatus.PENDING) {
+            throw new BadRequestException("Only pending bookings can be accepted or rejected");
+        }
+
+        String action = request.getAction().trim().toUpperCase(Locale.ROOT);
+        if ("ACCEPT".equals(action)) {
+            booking.setStatus(BookingStatus.CONFIRMED);
+        } else if ("REJECT".equals(action)) {
+            booking.setStatus(BookingStatus.CANCELLED);
+        } else {
+            throw new BadRequestException("Action must be ACCEPT or REJECT");
+        }
+
+        booking.setTrainerResponseMessage(request.getMessage() == null ? null : request.getMessage().trim());
+        booking.setTrainerProposedTimeSlot(request.getProposedTimeSlot() == null ? null : request.getProposedTimeSlot().trim());
+
+        return toResponse(bookingRepository.save(booking));
+    }
+
     private boolean hasSessionEnded(TrainerBooking booking) {
         String[] parts = booking.getTimeSlot().split("-");
         if (parts.length != 2) {
@@ -115,6 +146,8 @@ public class BookingService {
                 .timeSlot(booking.getTimeSlot())
                 .userRating(booking.getUserRating())
                 .userReview(booking.getUserReview())
+                .trainerResponseMessage(booking.getTrainerResponseMessage())
+                .trainerProposedTimeSlot(booking.getTrainerProposedTimeSlot())
                 .status(booking.getStatus())
                 .build();
     }

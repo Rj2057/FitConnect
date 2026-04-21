@@ -17,9 +17,8 @@ function linksForRole(role) {
       { to: '/memberships', label: 'Memberships' },
       { to: '/bookings', label: 'Bookings' },
       { to: '/workouts', label: 'Workouts' },
-      { to: '/attendance', label: 'Attendance' },
       { to: '/payments', label: 'Payments' },
-      { to: '/streak', label: 'Streak' },
+      { to: '/streak', label: 'Streak & Attendance' },
     ]
   }
 
@@ -27,7 +26,6 @@ function linksForRole(role) {
     return [
       ...common,
       { to: '/bookings', label: 'Client Sessions' },
-      { to: '/trainer-profile', label: 'Trainer Profile' },
     ]
   }
 

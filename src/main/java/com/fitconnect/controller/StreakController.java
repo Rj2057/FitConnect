@@ -30,6 +30,13 @@ public class StreakController {
         return ResponseEntity.ok(streakService.updateForCurrentUser());
     }
 
+    @PostMapping("/pause")
+    @PreAuthorize("hasRole('GYM_USER')")
+    @Operation(summary = "Use pause token", description = "Consumes pause tokens to preserve streak for the current day")
+    public ResponseEntity<StreakResponse> usePauseToken() {
+        return ResponseEntity.ok(streakService.usePauseForCurrentUser());
+    }
+
     @GetMapping("/{userId}")
     @Operation(summary = "Get streak by user id", description = "Returns streak information for a specific user")
     public ResponseEntity<StreakResponse> getStreak(@PathVariable Long userId) {

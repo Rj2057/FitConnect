@@ -3,6 +3,7 @@ package com.fitconnect.controller;
 import com.fitconnect.dto.BookingRatingRequest;
 import com.fitconnect.dto.BookingRequest;
 import com.fitconnect.dto.BookingResponse;
+import com.fitconnect.dto.BookingStatusUpdateRequest;
 import com.fitconnect.service.BookingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -55,5 +57,13 @@ public class BookingController {
     public ResponseEntity<BookingResponse> rateBooking(@PathVariable Long bookingId,
                                                        @Valid @RequestBody BookingRatingRequest request) {
         return ResponseEntity.ok(bookingService.rateBooking(bookingId, request));
+    }
+
+    @PutMapping("/{bookingId}/status")
+    @PreAuthorize("hasRole('GYM_TRAINER')")
+    @Operation(summary = "Update booking status", description = "Allows trainer to accept or reject booking with a response message")
+    public ResponseEntity<BookingResponse> updateBookingStatus(@PathVariable Long bookingId,
+                                                               @Valid @RequestBody BookingStatusUpdateRequest request) {
+        return ResponseEntity.ok(bookingService.updateBookingStatus(bookingId, request));
     }
 }

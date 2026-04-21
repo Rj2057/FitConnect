@@ -21,7 +21,7 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler({BadRequestException.class, MethodArgumentNotValidException.class})
+    @ExceptionHandler({BadRequestException.class, PaymentException.class, MethodArgumentNotValidException.class})
     public ResponseEntity<Map<String, Object>> handleBadRequest(Exception ex) {
         if (ex instanceof MethodArgumentNotValidException validationEx) {
             StringBuilder message = new StringBuilder("Validation failed: ");

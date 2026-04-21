@@ -17,5 +17,7 @@ public class BookingResponse {
     private String timeSlot;
     private Integer userRating;
     private String userReview;
+    private String trainerResponseMessage;
+    private String trainerProposedTimeSlot;
     private BookingStatus status;
 }

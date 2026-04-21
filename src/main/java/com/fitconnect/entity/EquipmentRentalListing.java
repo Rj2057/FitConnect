@@ -1,18 +1,17 @@
 package com.fitconnect.entity;
 
-import com.fitconnect.entity.enums.BookingStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -25,40 +24,35 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "trainer_bookings")
-public class TrainerBooking {
+@Table(name = "equipment_rental_listings")
+public class EquipmentRentalListing {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "trainer_id", nullable = false)
-    private Trainer trainer;
+    @JoinColumn(name = "seller_owner_id", nullable = false)
+    private User sellerOwner;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "seller_gym_id", nullable = false)
+    private Gym sellerGym;
 
     @Column(nullable = false)
-    private LocalDate date;
+    private String equipmentName;
+
+    @Column(length = 2000)
+    private String details;
 
     @Column(nullable = false)
-    private String timeSlot;
+    private BigDecimal monthlyRentPrice;
 
-    @Column
-    private Integer userRating;
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
-    @Column(length = 1000)
-    private String userReview;
-
-    @Column(length = 1000)
-    private String trainerResponseMessage;
-
-    @Column
-    private String trainerProposedTimeSlot;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private BookingStatus status;
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
+    }
 }
