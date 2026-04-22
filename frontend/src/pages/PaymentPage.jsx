@@ -20,6 +20,7 @@ export default function PaymentPage() {
     gymId: prefilledGymId ? parseInt(prefilledGymId) : '',
     amount: prefilledAmount || '',
     description: prefilledDescription || '',
+    paymentType: 'MOCK',
   });
 
   const [loading, setLoading] = useState(false);
@@ -84,12 +85,13 @@ export default function PaymentPage() {
         gymId: form.gymId,
         amount: parseFloat(form.amount),
         description: form.description,
+        paymentType: form.paymentType,
       });
 
       setPaymentStatus(response.data);
       setPaymentId(response.data.id);
       setSuccess(true);
-      setForm({ gymId: '', amount: '', description: '' });
+      setForm({ gymId: '', amount: '', description: '', paymentType: 'MOCK' });
     } catch (err) {
       setError(err.response?.data?.message || 'Payment processing failed. Please try again.');
     } finally {
@@ -179,6 +181,24 @@ export default function PaymentPage() {
                     placeholder="e.g., Monthly membership - PRO"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
+                </div>
+
+                {/* Payment Gateway */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Payment Gateway
+                  </label>
+                  <select
+                    name="paymentType"
+                    value={form.paymentType}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="MOCK">Mock (Testing)</option>
+                    <option value="STRIPE">Stripe</option>
+                    <option value="PAYPAL">PayPal</option>
+                    <option value="RAZORPAY">Razorpay</option>
+                  </select>
                 </div>
 
                 {/* Error */}
