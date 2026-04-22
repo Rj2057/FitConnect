@@ -76,6 +76,7 @@ export function PaymentsPage() {
     gymId: prefilledGymId ? parseInt(prefilledGymId) : '',
     amount: prefilledAmount || '',
     description: prefilledDescription || '',
+    paymentType: 'MOCK',
   })
   const [paymentLoading, setPaymentLoading] = useState(false)
   const [paymentError, setPaymentError] = useState('')
@@ -155,10 +156,11 @@ export function PaymentsPage() {
         gymId: paymentForm.gymId,
         amount: parseFloat(paymentForm.amount),
         description: paymentForm.description,
+        paymentType: paymentForm.paymentType,
       })
       setPaymentSuccess(response)
       setPaymentId(response.id)
-      setPaymentForm({ gymId: '', amount: '', description: '' })
+      setPaymentForm({ gymId: '', amount: '', description: '', paymentType: 'MOCK' })
     } catch (err) {
       setPaymentError(err?.response?.data?.message || 'Payment processing failed. Please try again.')
     } finally {
@@ -246,6 +248,19 @@ export function PaymentsPage() {
                   placeholder="e.g., Monthly membership - PRO"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </Field>
+
+              <Field label="Payment Gateway">
+                <Select
+                  name="paymentType"
+                  value={paymentForm.paymentType}
+                  onChange={handlePaymentInputChange}
+                >
+                  <option value="MOCK">Mock (Testing)</option>
+                  <option value="STRIPE">Stripe</option>
+                  <option value="PAYPAL">PayPal</option>
+                  <option value="RAZORPAY">Razorpay</option>
+                </Select>
               </Field>
 
               {paymentError && <Message kind="error">{paymentError}</Message>}
